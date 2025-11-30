@@ -18,14 +18,14 @@ def scrape_google_xray(domain, skill):
     }
 
     try:
-        time.sleep(random.uniform(2, 4)) # delay 
+        time.sleep(random.uniform(2, 4)) 
         response = requests.get(url, headers=headers, timeout=15)
 
-        print("\nResponse (google x ray raw):\n",response.text)
+      
         soup = BeautifulSoup(response.text, "html.parser")
         
         results = soup.select("div.tF2Cxc, div.MjjYud, div.g")
-        print("\nResponse (google-xray result cleaned):\n",results)
+
         for item in results:
             title_tag = item.find("h3")
             link = item.find("a", href=True)

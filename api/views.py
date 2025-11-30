@@ -26,7 +26,7 @@ def search_candidates(request):
 
     logger.info(f"Received search request: Skill='{skill}', Exp={experience}")
 
-    # 1. Scraping Phase (Expanded to 5 Sources)
+ 
     results = []
     
     logger.info("Starting PostJobFree scrape...")
@@ -38,41 +38,35 @@ def search_candidates(request):
     logger.info("Starting Apna scrape (via Google)...")
     results += scrape_google_xray("apna.co", skill)
 
-    # --- NEW SOURCES ---
+   
     logger.info("Starting Indeed scrape (via Google)...")
-    results += scrape_google_xray("in.indeed.com", skill) # Targeting Indeed India
+    results += scrape_google_xray("in.indeed.com", skill) 
 
     logger.info("Starting Monster/Foundit scrape (via Google)...")
-    results += scrape_google_xray("foundit.in", skill) # Monster is now Foundit
+    results += scrape_google_xray("foundit.in", skill) 
     # -------------------
 
-    # 2. Filtering Phase
     filtered = []
     for c in results:
         exp_num = parse_experience(c["experience_years"])
-        
-        # Lenient Experience Check
+    
         is_exp_good = (exp_num is None) or (exp_num >= experience)
 
-        # Strict Skill Check
+    
         is_skill_good = matches_skill(c["skills"], skill)
 
         if is_exp_good and is_skill_good:
             filtered.append(c)
 
-    # 3. Fallback Phase
+   
     if not filtered:
         logger.warning("No candidates found via scraping. Returning mock data.")
         filtered = [{
-            "source": "Mock Data",
-            "name": "Amit Sharma",
-            "current_job_title": f"Senior {skill} Developer",
-            "experience_years": f"{experience}+ Years",
-            "skills": [skill],
-            "location": "NA",
-            "summary": "Fallback mock profile generated because live scraping returned 0 results.",
-            "resume_url": "https://naukri.com/mock-profile"
-        }]
+        "status": "success",
+        "count": 0,
+        "candidates": [],
+        "message": "No candidates found. PostJobFree returned no matches. Google X-Ray sources are blocked by bot detection."
+    }]
 
     logger.info(f"Returning {len(filtered)} candidates.")
     

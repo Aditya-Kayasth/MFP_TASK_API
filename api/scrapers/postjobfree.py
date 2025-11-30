@@ -15,7 +15,7 @@ def scrape_postjobfree(skill):
 
     try:
         response = requests.get(url, headers=headers, timeout=15)
-        print("\nResponse (postjobfree):\n",response.text)
+        #print("\nResponse (postjobfree):\n",response.text)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             
