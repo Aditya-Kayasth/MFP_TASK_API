@@ -134,13 +134,19 @@ LOGGING = {
         },
     },
     'handlers': {
+        'file': {  
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+        },
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console','file'],
         'level': 'INFO',
     },
 }

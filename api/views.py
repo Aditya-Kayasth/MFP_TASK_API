@@ -2,16 +2,20 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import logging
 
-from .scrapers import scrape_postjobfree, scrape_google_xray,parse_experience
+from .scrapers import scrape_postjobfree, scrape_google_xray, parse_experience
 
 logger = logging.getLogger(__name__)
+
+
+def matches_skill(candidate_skills, search_skill):
+    search_skill_lower = search_skill.lower()
+    return any(search_skill_lower in skill.lower() for skill in candidate_skills)
 
 @api_view(['POST'])
 def search_candidates(request):
     skill = request.data.get("skill")
     experience = request.data.get("experience")
 
-    # Validation
     if not skill:
         return Response({"error": "Missing skill"}, status=400)
     
@@ -22,28 +26,41 @@ def search_candidates(request):
 
     logger.info(f"Received search request: Skill='{skill}', Exp={experience}")
 
-
+    # 1. Scraping Phase (Expanded to 5 Sources)
     results = []
     
     logger.info("Starting PostJobFree scrape...")
     results += scrape_postjobfree(skill)
     
-    logger.info("Starting Naukri scrape...")
+    logger.info("Starting Naukri scrape (via Google)...")
     results += scrape_google_xray("naukri.com", skill)
     
-    logger.info("Starting Apna scrape...")
+    logger.info("Starting Apna scrape (via Google)...")
     results += scrape_google_xray("apna.co", skill)
 
+    # --- NEW SOURCES ---
+    logger.info("Starting Indeed scrape (via Google)...")
+    results += scrape_google_xray("in.indeed.com", skill) # Targeting Indeed India
 
+    logger.info("Starting Monster/Foundit scrape (via Google)...")
+    results += scrape_google_xray("foundit.in", skill) # Monster is now Foundit
+    # -------------------
+
+    # 2. Filtering Phase
     filtered = []
-
     for c in results:
         exp_num = parse_experience(c["experience_years"])
-        if exp_num is None: 
-            filtered.append(c)
-        elif exp_num >= experience:
+        
+        # Lenient Experience Check
+        is_exp_good = (exp_num is None) or (exp_num >= experience)
+
+        # Strict Skill Check
+        is_skill_good = matches_skill(c["skills"], skill)
+
+        if is_exp_good and is_skill_good:
             filtered.append(c)
 
+    # 3. Fallback Phase
     if not filtered:
         logger.warning("No candidates found via scraping. Returning mock data.")
         filtered = [{

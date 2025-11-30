@@ -1,10 +1,11 @@
-# Ignore the virtual environment
+
 venv/
 env/
-
-# Ignore compiled python files
 __pycache__/
 *.pyc
-
-# Ignore system files
 .DS_Store
+
+# trial files
+advanced_demo.py
+debug_google.html
+debug.log
